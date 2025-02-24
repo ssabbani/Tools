@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A fully responsive image compression tool that lets you adjust compression levels, compare file sizes, and download optimized images.">
+  <meta name="keywords" content="Image Compression, Responsive Web Design, SEO, Google AdSense, JavaScript">
+  <title>Image Compression Tool</title>
+  <style>
+    /* Base styling */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f6;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      padding: 1.5rem;
+      text-align: center;
+      color: #fff;
+    }
+    main {
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .section {
+      flex: 1 1 280px;
+      max-width: 280px;
+      background: linear-gradient(145deg, #ffffff, #f0f0f0);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+    }
+    .section h2 {
+      margin-top: 0;
+      text-align: center;
+      color: #333;
+    }
+    input[type="file"] {
+      display: block;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .results img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border-radius: 8px;
+    }
+    .info {
+      margin-top: 0.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: linear-gradient(135deg, #ff4b2b, #ff416c);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    a#downloadLink {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: #2575fc;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a#downloadLink:hover {
+      background: #6a11cb;
+    }
+    /* Responsive styling */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    /* Ad space styling */
+    .ad-space {
+      text-align: center;
+      margin: 2rem 0;
+      background: linear-gradient(135deg, #ece9e6, #ffffff);
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Image Compression Tool</h1>
+  </header>
+
+  <main>
+    <!-- Advertisement Space -->
+    <div class="ad-space">
+      <!-- Google AdSense code placeholder -->
+      <!-- Insert your Google AdSense code and Unit ID here -->
+      <p>Your Ad Here</p>
+    </div>
+
+    <div class="container">
+      <!-- Upload and Options Section -->
+      <div class="section">
+        <h2>Upload & Options</h2>
+        <input type="file" id="imageInput" accept="image/jpeg, image/png, image/webp">
+        <label for="qualityRange">Compression Quality: <span id="qualityValue">0.8</span></label>
+        <input type="range" id="qualityRange" min="0.1" max="1" step="0.1" value="0.8">
+        <button id="compressButton" disabled>Compress Image</button>
+      </div>
+      <!-- Results Section -->
+      <div class="section results">
+        <h2>Results</h2>
+        <div id="originalContainer">
+          <h3>Original Image</h3>
+          <img id="originalImage" src="" alt="Original Image" style="display: none;">
+          <p class="info" id="originalSize"></p>
+        </div>
+        <div id="compressedContainer">
+          <h3>Compressed Image</h3>
+          <img id="compressedImage" src="" alt="Compressed Image" style="display: none;">
+          <p class="info" id="compressedSize"></p>
+          <a id="downloadLink" href="#" download="compressed_image.jpg" style="display: none;">Download Compressed Image</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Get DOM elements
+    const imageInput = document.getElementById('imageInput');
+    const qualityRange = document.getElementById('qualityRange');
+    const qualityValue = document.getElementById('qualityValue');
+    const compressButton = document.getElementById('compressButton');
+    const originalImage = document.getElementById('originalImage');
+    const compressedImage = document.getElementById('compressedImage');
+    const originalSize = document.getElementById('originalSize');
+    const compressedSize = document.getElementById('compressedSize');
+    const downloadLink = document.getElementById('downloadLink');
+
+    let uploadedImage;
+
+    // Update displayed quality value when slider changes
+    qualityRange.addEventListener('input', () => {
+      qualityValue.textContent = qualityRange.value;
+    });
+
+    // Handle image file upload
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        // Verify supported file types
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          alert('Unsupported file type. Please select a JPEG, PNG, or WEBP image.');
+          return;
+        }
+        // Read and display original image
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          originalImage.src = event.target.result;
+          originalImage.style.display = 'block';
+          originalSize.textContent = 'File Size: ' + formatBytes(file.size);
+          
+          // Disable the compress button until the image is fully loaded
+          compressButton.disabled = true;
+          uploadedImage = new Image();
+          uploadedImage.onload = function() {
+            compressButton.disabled = false; // Enable once loaded
+          }
+          uploadedImage.src = event.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Compress the image on button click
+    compressButton.addEventListener('click', () => {
+      if (!uploadedImage || !uploadedImage.complete) {
+        alert('Please wait until the image is fully loaded.');
+        return;
+      }
+      const quality = parseFloat(qualityRange.value);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Use naturalWidth/naturalHeight to ensure correct dimensions
+      canvas.width = uploadedImage.naturalWidth;
+      canvas.height = uploadedImage.naturalHeight;
+      ctx.drawImage(uploadedImage, 0, 0);
+      
+      // Decide on MIME type (PNG compression may not support quality adjustment)
+      const mimeType = imageInput.files[0].type === 'image/png' ? 'image/png' : 'image/jpeg';
+      const compressedDataUrl = canvas.toDataURL(mimeType, quality);
+      
+      // Display compressed image and file size
+      compressedImage.src = compressedDataUrl;
+      compressedImage.style.display = 'block';
+      
+      const compressedBlob = dataURLtoBlob(compressedDataUrl);
+      compressedSize.textContent = 'File Size: ' + formatBytes(compressedBlob.size);
+      
+      // Set download link for the compressed image
+      downloadLink.href = compressedDataUrl;
+      downloadLink.style.display = 'block';
+    });
+
+    // Helper: Convert Data URL to Blob
+    function dataURLtoBlob(dataurl) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while(n--){
+          u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], {type: mime});
+    }
+
+    // Helper: Format bytes as human-readable text
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+  </script>
+</body>
+</html>
